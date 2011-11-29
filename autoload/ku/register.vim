@@ -46,6 +46,7 @@ function! ku#register#on_source_enter(source_name_ext)  "{{{2
       call add(_, {
       \   'abbr': printf('%s [%s] %s', registers[i], type, content),
       \   'word': content,
+      \   'dup': 1,
       \   'ku_register': registers[i],
       \   'ku__sort_priority': i,
       \ })
