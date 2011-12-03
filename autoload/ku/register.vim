@@ -40,12 +40,13 @@ function! ku#register#on_source_enter(source_name_ext)  "{{{2
   let _ = []
   let registers = split('"*+0123456789abcdefghijklmnopqrstuvwxyz', '.\zs')
   for i in range(0, len(registers) - 1)
-    let type = s:register_readable_type_name(registers[i])
-    if type != ''
-      let content = getreg(registers[i])
+    let register_type = s:register_type_from_wise_name(registers[i])
+    if register_type != ''
+      let body = getreg(registers[i])
+      let body = body[: match(body, '.\ze[\n\r]')]
       call add(_, {
-      \   'abbr': printf('%s [%s] %s', registers[i], type, content),
-      \   'word': content,
+      \   'abbr': printf('%s [%s] %s', registers[i], register_type, body),
+      \   'word': body,
       \   'dup': 1,
       \   'ku_register': registers[i],
       \   'ku__sort_priority': i,
@@ -90,8 +91,8 @@ endfunction
 
 
 " Misc.  "{{{1
-function! s:register_readable_type_name(regname)  "{{{2
-  let type = getregtype(a:regname)[0]
+function! s:register_type_from_wise_name(name)  "{{{2
+  let type = getregtype(a:name)[0]
   if type ==# 'v'
     return 'char'
   elseif type ==# 'V'
