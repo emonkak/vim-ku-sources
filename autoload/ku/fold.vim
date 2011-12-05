@@ -50,8 +50,9 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
       let lines = result[1]
       let text = result[2]
       call add(_, {
-      \   'menu': 'lines ' . lines,
+      \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
       \   'word': text,
+      \   'menu': 'lines ' . lines,
       \   'ku__sort_priority': lnum,
       \ })
       let lnum = foldclosedend(lnum)
