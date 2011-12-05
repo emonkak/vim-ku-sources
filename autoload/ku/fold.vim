@@ -38,9 +38,9 @@ endfunction
 
 function! ku#fold#on_source_enter(source_name_ext)  "{{{2
   let _ = []
-  let original_bufnr = bufnr('%')
+  let original_winnr = winnr()
 
-  execute 'noautocmd' bufnr('#') 'buffer'
+  noautocmd wincmd p
 
   let lnum = 1
   while lnum < line('$')
@@ -59,7 +59,7 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
     let lnum += 1
   endwhile
 
-  execute 'noautocmd' original_bufnr 'buffer'
+  execute original_winnr 'wincmd w'
 
   let s:cached_items = _
 endfunction
