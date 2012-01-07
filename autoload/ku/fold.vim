@@ -39,8 +39,10 @@ endfunction
 function! ku#fold#on_source_enter(source_name_ext)  "{{{2
   let _ = []
   let original_winnr = winnr()
+  let original_foldtext = &l:foldtext
 
   noautocmd wincmd p
+  setlocal foldtext&
 
   let lnum = 1
   while lnum < line('$')
@@ -60,6 +62,7 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
     let lnum += 1
   endwhile
 
+  let &l:foldtext = original_foldtext
   execute original_winnr 'wincmd w'
 
   let s:cached_items = _
