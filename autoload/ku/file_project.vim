@@ -137,9 +137,6 @@ function! s:gather_items_from_git(project_path)  "{{{2
     \ }
     for entry in split(result, "\n")
       let matches = matchlist(entry, '\(\S\)\s\(.*\)')
-      if len(matches) == 0
-        continue
-      endif
       call add(_, {
       \   'menu': get(tags, matches[1], 'other'),
       \   'word': matches[2],
