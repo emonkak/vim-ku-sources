@@ -23,7 +23,10 @@
 " }}}
 " Variables  "{{{1
 
-let g:ku_file_rec_ignore_pattern = get(g:, 'ku_file_rec_ignore_pattern', 0)
+let g:ku_file_rec_ignore_pattern =
+\ get(g:, 'ku_file_rec_ignore_pattern', '\.\(dll\|exe\|hi\|o\|swp\)$')
+let g:ku_file_rec_max_candidates =
+\ get(g:, 'ku_file_rec_max_candidates', 500)
 
 
 
@@ -84,39 +87,31 @@ function! ku#file_rec#gather_items(source_name_ext, pattern)  "{{{2
   let items = []
   let directories = [{'abbr': a:pattern}]
 
-  while !empty(directories) && len(items) + len(directories) < 100
-    for directory in remove(directories, 0, -1)
-      for item in ku#file#gather_items(a:source_name_ext, directory.abbr)
-        if g:ku_file_rec_ignore_pattern is 0
-        \  || item.word !~# g:ku_file_rec_ignore_pattern
-          call add(item.menu ==# 'dir' ? directories : items, item)
-        endif
-      endfor
+  while !empty(directories)
+  \     && len(items) + len(directories) < g:ku_file_rec_max_candidates
+    let directory = remove(directories, 0)
+    for item in ku#file#gather_items(a:source_name_ext, directory.abbr)
+      if item.word !~# g:ku_file_rec_ignore_pattern
+        call add(item.menu ==# 'dir' ? directories : items, item)
+      endif
     endfor
   endwhile
-  call extend(items, directories)
 
-  return items
+  return extend(items, directories)
 endfunction
 
 
 
 
 function! ku#file_rec#acc_valid_p(source_name_ext, item, sep)  "{{{2
-  let _ = 'ku#file#acc_valid_p'
-  if exists('*{_}')
-    return {_}(a:source_name_ext, a:item, a:sep)
-  endif
+  return ku#file_rec#acc_valid_p(a:source_name_ext, a:item, a:sep)
 endfunction
 
 
 
 
 function! ku#file_rec#special_char_p(source_name_ext, char)  "{{{2
-  let _ = 'ku#file#special_char_p'
-  if exists('*{_}')
-    return {_}(a:source_name_ext, a:char)
-  endif
+  return ku#file#special_char_p(a:source_name_ext, a:char)
 endfunction
 
 
