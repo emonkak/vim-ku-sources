@@ -38,32 +38,35 @@ endfunction
 
 function! ku#fold#on_source_enter(source_name_ext)  "{{{2
   let _ = []
+
   let original_winnr = winnr()
   let original_foldtext = &l:foldtext
 
-  noautocmd wincmd p
-  setlocal foldtext&
+  try
+    noautocmd wincmd p
+    setlocal foldtext&
 
-  let lnum = 1
-  while lnum < line('$')
-    if foldclosed(lnum) > 0
-      let result = matchlist(foldtextresult(lnum),
-      \                      '^+-\+\(\s*\d\+\)\slines:\s\(.\{-}\)\s*$')
-      let lines = result[1]
-      let text = result[2]
-      call add(_, {
-      \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
-      \   'word': text,
-      \   'menu': lines . ' lines',
-      \   'ku__sort_priority': lnum,
-      \ })
-      let lnum = foldclosedend(lnum)
-    endif
-    let lnum += 1
-  endwhile
-
-  let &l:foldtext = original_foldtext
-  execute original_winnr 'wincmd w'
+    let lnum = 1
+    while lnum < line('$')
+      if foldclosed(lnum) > 0
+        let result = matchlist(foldtextresult(lnum),
+        \                      '^+-\+\(\s*\d\+\)\slines:\s\(.\{-}\)\s*$')
+        let lines = result[1]
+        let text = result[2]
+        call add(_, {
+        \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
+        \   'word': text,
+        \   'menu': lines . ' lines',
+        \   'ku__sort_priority': lnum,
+        \ })
+        let lnum = foldclosedend(lnum)
+      endif
+      let lnum += 1
+    endwhile
+  finally
+    let &l:foldtext = original_foldtext
+    execute original_winnr 'wincmd w'
+  endtry
 
   let s:cached_items = _
 endfunction
