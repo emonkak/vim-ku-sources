@@ -38,8 +38,7 @@ endfunction
 
 function! ku#file_project#on_before_action(source_name_ext, item)  "{{{2
   if has_key(a:item, '_ku_project_path')
-    let a:item.word = a:item._ku_project_path . ku#path_separator()
-    \               . a:item.word
+    let a:item.word = ku#make_path(a:item._ku_project_path, a:item.word)
   endif
   return a:item
 endfunction
@@ -54,7 +53,7 @@ function! ku#file_project#on_source_enter(source_name_ext)  "{{{2
   while !empty(directories)
     let project_path = join(directories, ku#path_separator())
 
-    if isdirectory(project_path . ku#path_separator() . '.git')
+    if isdirectory(ku#make_path(project_path, '.git'))
       let s:cached_items = s:gather_items_from_git(project_path)
       break
     else
@@ -73,14 +72,14 @@ endfunction
 
 
 function! ku#file_project#action_table(source_name_ext)  "{{{2
-  return ku#file_rec#action_table(a:source_name_ext)
+  return ku#file#action_table(a:source_name_ext)
 endfunction
 
 
 
 
 function! ku#file_project#key_table(source_name_ext)  "{{{2
-  return ku#file_rec#key_table(a:source_name_ext)
+  return ku#file#key_table(a:source_name_ext)
 endfunction
 
 
@@ -101,7 +100,7 @@ function! ku#file_project#acc_valid_p(source_name_ext, item, sep)  "{{{2
   if !empty(s:cached_items)
     return 0
   else
-    return ku#file_rec#acc_valid_p(a:source_name_ext, a:item, a:sep)
+    return ku#file#acc_valid_p(a:source_name_ext, a:item, a:sep)
   endif
 endfunction
 
@@ -112,7 +111,7 @@ function! ku#file_project#special_char_p(source_name_ext, char)  "{{{2
   if !empty(s:cached_items)
     return 0
   else
-    return ku#file_rec#special_char_p(a:source_name_ext, a:char)
+    return ku#file#special_char_p(a:source_name_ext, a:char)
   endif
 endfunction
 
@@ -123,28 +122,46 @@ endfunction
 function! s:gather_items_from_git(project_path)  "{{{2
   let _ = []
 
-  let git_directory = a:project_path . ku#path_separator() . '.git'
-  let result = system(printf('git --git-dir=%s ls-files -vcmo',
-  \                          shellescape(git_directory)))
-  if v:shell_error == 0
-    let tags = {
-    \   'H': 'cached',
-    \   'S': 'skip',
-    \   'M': 'unmerged',
-    \   'R': 'deleted',
-    \   'C': 'modified',
-    \   'K': 'killed',
-    \ }
-    for entry in split(result, "\n")
-      let matches = matchlist(entry, '\(\S\)\s\(.*\)')
-      call add(_, {
-      \   'menu': get(tags, matches[1], 'other'),
-      \   'word': matches[2],
-      \   '_ku_project_path': a:project_path,
-      \   'ku__sort_priority': matches[1] ==# '?',
-      \ })
-    endfor
+  if type(a:project_path) == type([])
+    let project_path = a:project_path
+  else
+    let project_path = [a:project_path]
   endif
+
+  let original_cwd = getcwd()
+  cd `=ku#make_path(project_path)`
+  let result = system('git ls-files -vcmo')
+  cd `=original_cwd`
+
+  if v:shell_error != 0
+    return _
+  endif
+
+  let TAGS = {
+  \   'H': 'cached',
+  \   'S': 'skip',
+  \   'M': 'unmerged',
+  \   'R': 'deleted',
+  \   'C': 'modified',
+  \   'K': 'killed',
+  \ }
+
+  for entry in split(result, "\n")
+    let [tag, file] = split(entry, '^\S\s\zs', !0)
+    let target = project_path + [file]
+
+    if isdirectory(ku#make_path(target))
+      " It's submodule
+      call extend(_, s:gather_items_from_git(target))
+    else
+      call add(_, {
+      \   'menu': get(TAGS, tag, 'other'),
+      \   'word': ku#make_path(project_path[1:] + [file]),
+      \   '_ku_project_path': project_path[0],
+      \   'ku__sort_priority': tag ==# '?',
+      \ })
+    endif
+  endfor
 
   return _
 endfunction
