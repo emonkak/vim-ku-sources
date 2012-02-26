@@ -54,7 +54,7 @@ function! ku#file_project#on_source_enter(source_name_ext)  "{{{2
     let project_path = join(directories, ku#path_separator())
 
     if isdirectory(ku#make_path(project_path, '.git'))
-      let s:cached_items = s:gather_items_from_git(project_path)
+      let s:cached_items = s:gather_items_from_git([project_path])
       break
     else
       " TODO: Supports other VCS
@@ -122,14 +122,8 @@ endfunction
 function! s:gather_items_from_git(project_path)  "{{{2
   let _ = []
 
-  if type(a:project_path) == type([])
-    let project_path = a:project_path
-  else
-    let project_path = [a:project_path]
-  endif
-
   let original_cwd = getcwd()
-  cd `=ku#make_path(project_path)`
+  cd `=ku#make_path(a:project_path)`
   let result = system('git ls-files -vcmo')
   cd `=original_cwd`
 
@@ -148,7 +142,7 @@ function! s:gather_items_from_git(project_path)  "{{{2
 
   for entry in split(result, "\n")
     let [tag, file] = split(entry, '^\S\zs\s', !0)
-    let target = project_path + [file]
+    let target = a:project_path + [file]
 
     if isdirectory(ku#make_path(target))
       " It's submodule
@@ -156,8 +150,8 @@ function! s:gather_items_from_git(project_path)  "{{{2
     else
       call add(_, {
       \   'menu': get(TAGS, tag, 'other'),
-      \   'word': ku#make_path(project_path[1:] + [file]),
-      \   '_ku_project_path': project_path[0],
+      \   'word': ku#make_path(a:project_path[1:] + [file]),
+      \   '_ku_project_path': a:project_path[0],
       \   'ku__sort_priority': tag ==# '?',
       \ })
     endif
