@@ -40,20 +40,27 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
   let _ = []
 
   let original_winnr = winnr()
-  let original_foldtext = &l:foldtext
+  let original_lazyredraw = &lazyredraw
 
-  try
-    noautocmd wincmd p
-    setlocal foldtext&
+  set lazyredraw
 
+  noautocmd wincmd p
+  split
+  setlocal foldtext&
+
+  normal! zM
+
+  while 1
     let lnum = 1
+    let items = []
+
     while lnum < line('$')
       if foldclosed(lnum) > 0
         let result = matchlist(foldtextresult(lnum),
         \                      '^+-\+\(\s*\d\+\)\slines:\s\(.\{-}\)\s*$')
         let lines = result[1]
         let text = result[2]
-        call add(_, {
+        call add(items, {
         \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
         \   'word': text,
         \   'menu': lines . ' lines',
@@ -63,10 +70,18 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
       endif
       let lnum += 1
     endwhile
-  finally
-    let &l:foldtext = original_foldtext
-    execute original_winnr 'wincmd w'
-  endtry
+
+    if empty(items)
+      break
+    endif
+
+    call extend(_, items)
+    normal! zr
+  endwhile
+
+  close
+  execute original_winnr 'wincmd w'
+  let &lazyredraw = original_lazyredraw
 
   let s:cached_items = _
 endfunction
@@ -104,7 +119,7 @@ endfunction
 " Actions  "{{{2
 function! ku#fold#action_open(item)  "{{{3
   call cursor(a:item.ku__sort_priority, 1)
-  normal! zMzvzt
+  normal! zMzv
   return 0
 endfunction
 
