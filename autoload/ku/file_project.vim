@@ -145,8 +145,10 @@ function! s:gather_items_from_git(project_path)  "{{{2
     let target = a:project_path + [file]
 
     if isdirectory(ku#make_path(target))
-      " It's submodule
-      call extend(_, s:gather_items_from_git(target))
+      let submodule = ku#make_path(target + ['.git'])
+      if filereadable(submodule) || isdirectory(submodule)
+        call extend(_, s:gather_items_from_git(target))
+      endif
     else
       call add(_, {
       \   'menu': get(TAGS, tag, 'other'),
