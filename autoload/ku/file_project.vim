@@ -147,7 +147,7 @@ function! s:gather_items_from_git(project_path)  "{{{2
   \ }
 
   for entry in split(result, "\n")
-    let [tag, file] = split(entry, '^\S\s\zs', !0)
+    let [tag, file] = split(entry, '^\S\zs\s', !0)
     let target = project_path + [file]
 
     if isdirectory(ku#make_path(target))
