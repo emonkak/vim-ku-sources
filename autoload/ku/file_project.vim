@@ -23,7 +23,7 @@
 " }}}
 " Variables  "{{{1
 
-let s:cached_items = []
+let s:cached_items = {}
 
 
 
@@ -36,36 +36,9 @@ endfunction
 
 
 
-function! ku#file_project#on_before_action(source_name_ext, item)  "{{{2
-  if has_key(a:item, '_ku_project_path')
-    let a:item.word = ku#make_path(a:item._ku_project_path, a:item.word)
-  endif
-  return a:item
-endfunction
-
-
-
-
 function! ku#file_project#on_source_enter(source_name_ext)  "{{{2
-  let s:cached_items = []
-  let directories = split(getcwd(), ku#path_separator(), !0)
-
-  while !empty(directories)
-    let project_path = join(directories, ku#path_separator())
-
-    if isdirectory(ku#make_path(project_path, '.git'))
-      let s:cached_items = s:gather_items_from_git([project_path])
-      break
-    else
-      " TODO: Supports other VCS
-    endif
-
-    call remove(directories, -1)
-  endwhile
-
-  if empty(s:cached_items)
-    call ku#file_rec#on_source_enter(a:source_name_ext)
-  endif
+  let s:cached_items = {}
+  call ku#file_rec#on_source_enter(a:source_name_ext)
 endfunction
 
 
@@ -86,44 +59,40 @@ endfunction
 
 
 function! ku#file_project#gather_items(source_name_ext, pattern)  "{{{2
-  if !empty(s:cached_items)
-    return s:cached_items
-  else
-    return ku#file_rec#gather_items(a:source_name_ext, a:pattern)
-  endif
-endfunction
+  let directories = split(getcwd(), ku#path_separator(), !0)
+  \               + split(a:pattern, ku#path_separator())
+
+  while !empty(directories)
+    let project_path = join(directories, ku#path_separator())
+    if has_key(s:cached_items, project_path)
+      return s:cached_items[project_path]
+    endif
 
 
+    let git_dir = ku#make_path(project_path, '.git')
+    if isdirectory(git_dir) || filereadable(git_dir)
+      let items = s:gather_items_from_git(project_path, a:pattern)
+      let s:cached_items[project_path] = items
+      return items
+    endif
 
+    call remove(directories, -1)
+  endwhile
 
-function! ku#file_project#acc_valid_p(source_name_ext, item, sep)  "{{{2
-  if !empty(s:cached_items)
-    return 0
-  else
-    return ku#file#acc_valid_p(a:source_name_ext, a:item, a:sep)
-  endif
-endfunction
-
-
-
-
-function! ku#file_project#special_char_p(source_name_ext, char)  "{{{2
-  if !empty(s:cached_items)
-    return 0
-  else
-    return ku#file#special_char_p(a:source_name_ext, a:char)
-  endif
+  return ku#file_rec#gather_items(a:source_name_ext, a:pattern)
 endfunction
 
 
 
 
 " Misc.  "{{{1
-function! s:gather_items_from_git(project_path)  "{{{2
+function! s:gather_items_from_git(project_path, pattern)  "{{{2
   let _ = []
 
   let original_cwd = getcwd()
-  cd `=ku#make_path(a:project_path)`
+  if original_cwd < a:project_path
+    cd `=a:project_path`
+  endif
   let result = system('git ls-files -vcmo')
   cd `=original_cwd`
 
@@ -142,21 +111,14 @@ function! s:gather_items_from_git(project_path)  "{{{2
 
   for entry in split(result, "\n")
     let [tag, file] = split(entry, '^\S\zs\s', !0)
-    let target = a:project_path + [file]
+    let file = a:pattern . substitute(file, '/$', '', '')
 
-    if isdirectory(ku#make_path(target))
-      let submodule = ku#make_path(target + ['.git'])
-      if filereadable(submodule) || isdirectory(submodule)
-        call extend(_, s:gather_items_from_git(target))
-      endif
-    else
-      call add(_, {
-      \   'menu': get(TAGS, tag, 'other'),
-      \   'word': ku#make_path(a:project_path[1:] + [file]),
-      \   '_ku_project_path': a:project_path[0],
-      \   'ku__sort_priority': tag ==# '?',
-      \ })
-    endif
+    call add(_, {
+    \   'word': file,
+    \   'abbr': file . (isdirectory(file) ? ku#path_separator() : ''),
+    \   'menu': get(TAGS, tag, 'other'),
+    \   'ku__sort_priority': tag ==# '?',
+    \ })
   endfor
 
   return _
