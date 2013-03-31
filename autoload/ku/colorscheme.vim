@@ -38,7 +38,7 @@ endfunction
 
 function! ku#colorscheme#on_source_enter(source_name_ext)  "{{{2
   let _ = split(globpath(&runtimepath, 'colors/*.vim'), '\n')
-  call map(_, '{ "word": fnamemodify(v:val, ":t:r") }')
+  call map(_, '{ "word": fnamemodify(v:val, ":t:r"), "menu": fnamemodify(v:val, ":~:h:h")}')
   let s:cached_items = _
 endfunction
 
