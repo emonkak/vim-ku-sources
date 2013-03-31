@@ -68,7 +68,6 @@ function! ku#file_project#gather_items(source_name_ext, pattern)  "{{{2
       return s:cached_items[project_path]
     endif
 
-
     let git_dir = ku#make_path(project_path, '.git')
     if isdirectory(git_dir) || filereadable(git_dir)
       let items = s:gather_items_from_git(project_path, a:pattern)
@@ -93,7 +92,7 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
   if original_cwd < a:project_path
     cd `=a:project_path`
   endif
-  let result = system('git ls-files -vcmo')
+  let result = system('git ls-files -vcm')
   cd `=original_cwd`
 
   if v:shell_error != 0
@@ -129,4 +128,3 @@ endfunction
 
 " __END__  "{{{1
 " vim: foldmethod=marker
-
