@@ -104,7 +104,7 @@ endfunction
 
 
 function! ku#file_rec#acc_valid_p(source_name_ext, item, sep)  "{{{2
-  return ku#file_rec#acc_valid_p(a:source_name_ext, a:item, a:sep)
+  return ku#file#acc_valid_p(a:source_name_ext, a:item, a:sep)
 endfunction
 
 

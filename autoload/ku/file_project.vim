@@ -84,6 +84,13 @@ endfunction
 
 
 
+function! ku#file_project#acc_valid_p(source_name_ext, item, sep)  "{{{2
+  return ku#file#acc_valid_p(a:source_name_ext, a:item, a:sep)
+endfunction
+
+
+
+
 " Misc.  "{{{1
 function! s:gather_items_from_git(project_path, pattern)  "{{{2
   let _ = []
