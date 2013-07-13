@@ -26,7 +26,7 @@
 let g:ku_file_rec_ignore_pattern =
 \ get(g:, 'ku_file_rec_ignore_pattern', '\.\(dll\|exe\|hi\|o\|swp\)$')
 let g:ku_file_rec_max_candidates =
-\ get(g:, 'ku_file_rec_max_candidates', 500)
+\ get(g:, 'ku_file_rec_max_candidates', 1000)
 
 
 
