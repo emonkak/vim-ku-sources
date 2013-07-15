@@ -57,14 +57,14 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
     while lnum < line('$')
       if foldclosed(lnum) > 0
         let result = matchlist(foldtextresult(lnum),
-        \                      '^+-\+\(\s*\d\+\)\slines:\s\(.\{-}\)\s*$')
+        \                      '^+-\+\s*\(\d\+\)\slines:\s\(.\{-}\)\s*$')
         if !empty(result)
           let lines = result[1]
           let text = result[2]
           call add(items, {
           \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
           \   'word': lnum . ' ' . text,
-          \   'menu': lines . ' lines',
+          \   'menu': printf('%*d lines', len(line('$')), lines),
           \   'ku__sort_priority': lnum,
           \ })
         endif
