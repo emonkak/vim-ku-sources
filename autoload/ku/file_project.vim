@@ -69,7 +69,7 @@ function! ku#file_project#gather_items(source_name_ext, pattern)  "{{{2
     endif
 
     let git_dir = ku#make_path(project_path, '.git')
-    if isdirectory(git_dir) || filereadable(git_dir)
+    if executable('git') && (isdirectory(git_dir) || filereadable(git_dir))
       let items = s:gather_items_from_git(project_path, a:pattern)
       let s:cached_items[project_path] = items
       return items
