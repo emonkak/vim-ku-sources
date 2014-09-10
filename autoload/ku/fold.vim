@@ -41,49 +41,41 @@ function! ku#fold#on_source_enter(source_name_ext)  "{{{2
 
   let original_winnr = winnr()
   let original_lazyredraw = &lazyredraw
+  let original_foldtext = &foldtext
 
   set lazyredraw
+  noautocmd wincmd p  " Leave from the *ku* window
 
-  noautocmd wincmd p
   split
   setlocal foldtext&
-
   normal! zM
 
-  while 1
-    let lnum = 1
-    let items = []
-
-    while lnum < line('$')
-      if foldclosed(lnum) > 0
-        let result = matchlist(foldtextresult(lnum),
-        \                      '^+-\+\s*\(\d\+\)\slines:\s\(.\{-}\)\s*$')
-        if !empty(result)
-          let lines = result[1]
-          let text = result[2]
-          call add(items, {
-          \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
-          \   'word': lnum . ' ' . text,
-          \   'menu': printf('%*d lines', len(line('$')), lines),
-          \   'ku__sort_priority': lnum,
-          \ })
-        endif
-        let lnum = foldclosedend(lnum)
+  let lnum = 1
+  while lnum < line('$')
+    if foldclosed(lnum) > 0
+      let matches = matchlist(foldtextresult(lnum),
+      \                      '^+-\+\s*\(\d\+\)\slines:\s\(.\{-}\)\s*$')
+      if !empty(matches)
+        let line = matches[1]
+        let text = matches[2]
+        call add(_, {
+        \   'abbr': repeat(' ', (foldlevel(lnum) - 1) * 2) . text,
+        \   'word': lnum . ' ' . text,
+        \   'menu': printf('%*d lines', len(line('$')), line),
+        \   'ku__sort_priority': lnum,
+        \ })
       endif
-      let lnum += 1
-    endwhile
 
-    if empty(items)
-      break
+      execute lnum 'foldopen'
     endif
 
-    call extend(_, items)
-    normal! zr
+    let lnum += 1
   endwhile
 
   close
   execute original_winnr 'wincmd w'
   let &lazyredraw = original_lazyredraw
+  let &foldtext = original_foldtext
 
   let s:cached_items = _
 endfunction
