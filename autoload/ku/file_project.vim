@@ -99,7 +99,7 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
   if original_cwd < a:project_path
     cd `=a:project_path`
   endif
-  let result = system('git ls-files -vcmo')
+  let result = system('git ls-files -vcm')
   cd `=original_cwd`
 
   if v:shell_error != 0
