@@ -99,7 +99,7 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
   if original_cwd < a:project_path
     cd `=a:project_path`
   endif
-  let result = system('git ls-files -vcm')
+  let result = system('git ls-files -v -k -m -o --exclude-standard && git ls-files -v -X <(git ls-files --deleted) -c --exclude-standard')
   cd `=original_cwd`
 
   if v:shell_error != 0
@@ -122,8 +122,7 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
     call add(_, {
     \   'word': file,
     \   'abbr': file . (isdirectory(file) ? ku#path_separator() : ''),
-    \   'menu': get(TAGS, tag, 'other'),
-    \   'ku__sort_priority': tag ==# '?',
+    \   'menu': get(TAGS, tag, 'untracked'),
     \ })
   endfor
 
