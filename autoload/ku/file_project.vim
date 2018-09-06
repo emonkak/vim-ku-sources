@@ -99,7 +99,7 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
   if original_cwd < a:project_path
     cd `=a:project_path`
   endif
-  let result = system('git ls-files -v -k -m -o --exclude-standard && git ls-files -v -X <(git ls-files --deleted) -c --exclude-standard')
+  let result = system('git ls-files --exclude-standard -v -c -o')
   cd `=original_cwd`
 
   if v:shell_error != 0
@@ -115,13 +115,11 @@ function! s:gather_items_from_git(project_path, pattern)  "{{{2
   \   'K': 'killed',
   \ }
 
-  for entry in split(result, "\n")
-    let [tag, file] = split(entry, '^\S\zs\s', !0)
-    let file = a:pattern . substitute(file, '/$', '', '')
+  for line in split(result, "\n")
+    let [tag, file] = split(line, '^\S\zs\s', !0)
 
     call add(_, {
     \   'word': file,
-    \   'abbr': file . (isdirectory(file) ? ku#path_separator() : ''),
     \   'menu': get(TAGS, tag, 'untracked'),
     \ })
   endfor
