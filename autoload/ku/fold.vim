@@ -113,7 +113,7 @@ endfunction
 " Actions  "{{{2
 function! ku#fold#action_open(item)  "{{{3
   call cursor(a:item.ku__sort_priority, 1)
-  normal! zMzv
+  normal! zMzvzt
   return 0
 endfunction
 
